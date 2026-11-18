@@ -1,0 +1,1540 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5" />
+<title>Phòng thí nghiệm IFS affine — họ hai tham số</title>
+<style>
+  :root{
+    --bg:#0f1115; --panel:#171a21; --panel2:#1f2430; --ink:#e7ecf3;
+    --muted:#9aa3b2; --accent:#5aa6ff; --warn:#ffb454; --ok:#63d18a;
+    --c1:#ff6b6b; --c2:#4dd0e1; --c3:#ffd166; --c4:#a78bfa;
+    --border:#2a3040;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0;background:var(--bg);color:var(--ink);
+    font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;}
+  header{padding:10px 14px;background:var(--panel);border-bottom:1px solid var(--border);
+    display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:space-between}
+  header h1{font-size:16px;margin:0;font-weight:600}
+  header .tag{font-size:12px;color:var(--muted)}
+  main{display:grid;grid-template-columns:340px 1fr;gap:0;min-height:calc(100vh - 50px)}
+  @media (max-width: 900px){ main{grid-template-columns:1fr} }
+  aside{background:var(--panel);border-right:1px solid var(--border);padding:12px;
+    overflow-y:auto;max-height:calc(100vh - 50px)}
+  .section{background:var(--panel2);border:1px solid var(--border);border-radius:8px;
+    padding:10px;margin-bottom:10px}
+  .section h3{margin:0 0 8px 0;font-size:13px;color:var(--accent);letter-spacing:.3px}
+  .row{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:6px 0}
+  .row label{font-size:12px;color:var(--muted);min-width:60px}
+  input[type=range]{flex:1;min-width:120px}
+  input[type=number]{width:82px;background:#0b0e13;color:var(--ink);
+    border:1px solid var(--border);border-radius:4px;padding:4px 6px;font-size:12px}
+  input[type=text]{width:100px;background:#0b0e13;color:var(--ink);
+    border:1px solid var(--border);border-radius:4px;padding:4px 6px;font-size:12px}
+  input:disabled{opacity:.5;cursor:not-allowed}
+  button{background:#243047;color:var(--ink);border:1px solid var(--border);
+    border-radius:6px;padding:6px 10px;font-size:12px;cursor:pointer}
+  button:hover{background:#2d3c58}
+  button.primary{background:#2b5ea8;border-color:#3a78cf}
+  button.primary:hover{background:#3570c2}
+  button.danger{background:#6b2a2a;border-color:#8a3535}
+  button.warn{background:#6b4a1e;border-color:#8a6230}
+  button:disabled{opacity:.5;cursor:not-allowed}
+  .tabs{display:flex;gap:4px;margin-bottom:8px}
+  .tab{flex:1;padding:6px;text-align:center;background:#1a2030;border:1px solid var(--border);
+    border-radius:6px;cursor:pointer;font-size:12px;color:var(--muted)}
+  .tab.active{background:#2b5ea8;color:#fff;border-color:#3a78cf}
+  .legend{display:flex;gap:10px;flex-wrap:wrap;font-size:12px}
+  .sw{display:inline-block;width:12px;height:12px;border-radius:2px;vertical-align:middle;margin-right:4px}
+  #canvasWrap{position:relative;background:#0a0c10;overflow:hidden}
+  canvas{display:block;width:100%;height:100%;cursor:grab;touch-action:none}
+  canvas:active{cursor:grabbing}
+  #statusBar{position:absolute;left:8px;bottom:8px;background:rgba(20,24,32,.85);
+    border:1px solid var(--border);border-radius:6px;padding:6px 10px;font-size:11px;
+    color:var(--muted);max-width:calc(100% - 16px);line-height:1.45}
+  #statusBar b{color:var(--ink)}
+  #progressWrap{position:absolute;left:8px;right:8px;top:8px;display:none}
+  #progressBar{height:6px;background:#1a2030;border-radius:3px;overflow:hidden;border:1px solid var(--border)}
+  #progressFill{height:100%;background:var(--accent);width:0%}
+  #progressLabel{font-size:11px;color:var(--muted);margin-top:4px}
+  #pieceInfo{position:absolute;right:8px;top:8px;background:rgba(20,24,32,.92);
+    border:1px solid var(--border);border-radius:6px;padding:8px 10px;font-size:11px;
+    max-width:320px;display:none;line-height:1.5}
+  #pieceInfo .addr{color:var(--accent);font-weight:600;font-size:13px}
+  #pieceInfo .close{float:right;cursor:pointer;color:var(--muted)}
+  .chk{display:flex;gap:6px;align-items:center;font-size:12px;color:var(--ink)}
+  .chk input{margin:0}
+  .formula{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12px;
+    background:#0b0e13;border:1px solid var(--border);border-radius:6px;padding:8px;
+    white-space:pre-wrap;line-height:1.55}
+  .note{font-size:11px;color:var(--muted);line-height:1.5;background:#151925;
+    border:1px dashed var(--border);border-radius:6px;padding:8px}
+  .warn{color:var(--warn)}
+  .ok{color:var(--ok)}
+  #testBox{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:11px;
+    background:#0b0e13;border:1px solid var(--border);border-radius:6px;padding:8px;
+    max-height:180px;overflow-y:auto;line-height:1.5}
+  .zoomBtns{position:absolute;right:8px;bottom:8px;display:flex;flex-direction:column;gap:4px}
+  .zoomBtns button{width:36px;height:36px;font-size:16px;padding:0}
+  .linked-hint{font-size:10px;color:var(--muted);margin-left:4px;font-style:italic}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Phòng thí nghiệm IFS affine — họ hai tham số</h1>
+  <span class="tag">Canvas 2D · Không CDN · Không backend · α,β ∈ [−1,1]</span>
+</header>
+
+<main>
+  <aside>
+    <!-- Chế độ -->
+    <div class="section">
+      <h3>Chế độ vẽ</h3>
+      <div class="tabs">
+        <div class="tab active" data-mode="chaos">Attractor — Chaos game</div>
+        <div class="tab" data-mode="tri">Xấp xỉ tam giác — từng mức</div>
+      </div>
+
+      <!-- Chaos -->
+      <div id="chaosPanel">
+        <div class="row">
+          <label>Số điểm</label>
+          <input type="range" id="numPts" min="10000" max="1000000" step="10000" value="300000" />
+          <input type="number" id="numPtsNum" min="10000" max="1000000" step="10000" value="300000" />
+        </div>
+        <div class="row">
+          <label>Seed</label>
+          <input type="text" id="seed" value="20261115" />
+          <button id="newSeed">Seed mới</button>
+        </div>
+        <div class="row">
+          <div class="chk"><input type="radio" name="colorMode" id="cmMono" checked><label for="cmMono">Một màu</label></div>
+          <div class="chk"><input type="radio" name="colorMode" id="cmMap"><label for="cmMap">Theo ánh xạ</label></div>
+        </div>
+        <div class="row">
+          <button class="primary" id="drawChaos">Vẽ attractor</button>
+          <button class="danger" id="cancelTask">Hủy vẽ</button>
+        </div>
+        <div class="note">Ảnh xấp xỉ attractor bằng lấy mẫu ngẫu nhiên hữu hạn — không phải ảnh chính xác tuyệt đối.</div>
+      </div>
+
+      <!-- Tam giác -->
+      <div id="triPanel" style="display:none">
+        <div class="row">
+          <label>Mức n</label>
+          <input type="range" id="level" min="0" max="7" step="1" value="0" />
+          <input type="number" id="levelNum" min="0" max="7" step="1" value="0" />
+        </div>
+        <div class="row" style="font-size:12px;color:var(--muted)">
+          <span id="triCount">Số tam giác: 1</span>
+        </div>
+        <div class="row">
+          <button id="prevLevel">◀ Bước trước</button>
+          <button id="nextLevel">Bước tiếp ▶</button>
+        </div>
+        <div class="row">
+          <button id="drawL7">Vẽ ngay mức 7</button>
+          <button class="warn" id="autoRun">Tự chạy đến mức 7</button>
+          <button class="danger" id="stopRun">Dừng</button>
+        </div>
+        <div class="row">
+          <div class="chk"><input type="checkbox" id="showStroke" /><label for="showStroke">Viền tam giác</label></div>
+        </div>
+        <div class="note">Tₙ = f₁(Tₙ₋₁) ∪ f₂(Tₙ₋₁) ∪ f₃(Tₙ₋₁) ∪ f₄(Tₙ₋₁). Liệt kê cả mảnh trùng (nếu có). Với tham số tổng quát, không được giả định Tₙ lồng nhau hoặc các tam giác con không chồng lấn.</div>
+      </div>
+    </div>
+
+    <!-- Tham số -->
+    <div class="section">
+      <h3>Tham số α, β</h3>
+      <div class="row">
+        <div class="chk"><input type="checkbox" id="linkBeta" checked /><label for="linkBeta">Liên kết β = −α/3</label></div>
+      </div>
+      <div class="row">
+        <label>α</label>
+        <input type="range" id="alpha" min="-1" max="1" step="0.001" value="0" />
+        <input type="number" id="alphaNum" step="0.001" value="0" />
+      </div>
+      <div class="row">
+        <label>β</label>
+        <input type="range" id="beta" min="-1" max="1" step="0.001" value="0" />
+        <input type="number" id="betaNum" step="0.001" value="0" />
+        <span class="linked-hint" id="betaHint">Tự động theo β = −α/3</span>
+      </div>
+      <div class="row">
+        <button id="resetParams">Đặt α=β=0</button>
+        <button id="fitView">Vừa khung hình</button>
+        <button id="clearView">Xóa hình</button>
+        <button id="savePng">Tải PNG</button>
+      </div>
+      <div class="row">
+        <div class="chk"><input type="checkbox" id="autoUpdate" /><label for="autoUpdate">Tự cập nhật (debounce)</label></div>
+      </div>
+      <div id="paramState" class="note" style="display:none">Tham số đã thay đổi — bấm <b>Vẽ</b> để cập nhật.</div>
+    </div>
+
+    <!-- Hiển thị -->
+    <div class="section">
+      <h3>Hiển thị</h3>
+      <div class="row">
+        <div class="chk"><input type="checkbox" id="showAxes" checked /><label for="showAxes">Trục tọa độ</label></div>
+        <div class="chk"><input type="checkbox" id="showGrid" checked /><label for="showGrid">Lưới</label></div>
+        <div class="chk"><input type="checkbox" id="showOrig" checked /><label for="showOrig">Tam giác OAB</label></div>
+      </div>
+      <div class="row">
+        <div class="chk"><input type="checkbox" id="showLabels" checked /><label for="showLabels">Hiện địa chỉ các mảnh</label></div>
+        <div class="chk"><input type="checkbox" id="autoHideLabels" checked /><label for="autoHideLabels">Tự ẩn nhãn quá nhỏ</label></div>
+      </div>
+      <div class="row">
+        <label>Cỡ chữ</label>
+        <input type="number" id="labelSize" min="6" max="32" step="1" value="12" />
+        <span style="font-size:11px;color:var(--muted)" id="labelStats"></span>
+      </div>
+      <div class="row">
+        <div class="chk"><input type="checkbox" id="showContact" /><label for="showContact">Hiện cặp điểm tiếp xúc</label></div>
+      </div>
+    </div>
+
+    <!-- Chú giải -->
+    <div class="section">
+      <h3>Chú giải</h3>
+      <div class="legend">
+        <span><span class="sw" style="background:var(--c1)"></span>f₁</span>
+        <span><span class="sw" style="background:var(--c2)"></span>f₂</span>
+        <span><span class="sw" style="background:var(--c3)"></span>f₃</span>
+        <span><span class="sw" style="background:var(--c4)"></span>f₄</span>
+      </div>
+    </div>
+
+    <!-- Công thức -->
+    <div class="section">
+      <h3>Bốn ánh xạ</h3>
+      <div class="formula" id="formulaBox"></div>
+    </div>
+
+    <!-- Ý nghĩa toán học -->
+    <div class="section">
+      <h3>Ý nghĩa của β = −α/3</h3>
+      <div class="note">
+        Quan hệ β = −α/3 bảo đảm hai điểm có địa chỉ <b>4(23)∞</b> và <b>21∞</b> trùng nhau. Đây là điều kiện tiếp xúc của cặp điểm được chọn; <span class="warn">chưa phải chứng minh OSC hoặc tính disk-like của toàn bộ attractor</span>.<br/><br/>
+        <b>Chứng minh:</b><br/>
+        • fix₁ = điểm cố định của f₂∘f₃ = (0, −1)<br/>
+        • fix₂ = điểm cố định của f₁ = (2α/3, 0)<br/>
+        • U = f₄(fix₁) = (β, −1/2)<br/>
+        • V = f₂(fix₂) = (−α/3, −1/2)<br/>
+        • U = V ⟺ β = −α/3<br/><br/>
+        Trong địa chỉ: (23)∞ nghĩa là 232323..., 1∞ nghĩa là 111111... Chữ số bên trái là ánh xạ ngoài cùng.
+      </div>
+    </div>
+
+    <!-- Tự kiểm tra -->
+    <div class="section">
+      <h3>Tự kiểm tra</h3>
+      <div id="testBox">Đang chạy…</div>
+    </div>
+
+    <!-- Ghi chú khoa học -->
+    <div class="section">
+      <h3>Giới hạn khoa học</h3>
+      <div class="note">
+        Hình ảnh phục vụ khảo sát và hình thành giả thuyết. Quan sát bằng mắt <b>không chứng minh</b> điều kiện tập mở (OSC), tính đồng phôi với đĩa đóng, hay tính lát phủ.<br/>
+        Không tự động kết luận OSC đúng chỉ vì hình nhìn không chồng lấn; không đồng nhất OSC với disk-like; không khẳng định mọi α,β tạo attractor có nội thất; không khẳng định đã tìm được lớp tiling mới; không hiển thị nhãn "Lean verified".<br/>
+        <span class="ok">Tại α = β = 0, hệ trở về trường hợp tam giác OAB đã được nghiên cứu trong RC-000002-RIS-MO.</span>
+      </div>
+    </div>
+  </aside>
+
+  <div id="canvasWrap">
+    <canvas id="cv"></canvas>
+    <div id="progressWrap">
+      <div id="progressBar"><div id="progressFill"></div></div>
+      <div id="progressLabel"></div>
+    </div>
+    <div id="statusBar">Sẵn sàng.</div>
+    <div id="pieceInfo">
+      <span class="close" id="closePiece">✕</span>
+      <div id="pieceContent"></div>
+    </div>
+    <div class="zoomBtns">
+      <button id="zoomIn" title="Phóng to">+</button>
+      <button id="zoomOut" title="Thu nhỏ">−</button>
+      <button id="zoomFit" title="Vừa khung">⊙</button>
+    </div>
+  </div>
+</main>
+
+<script>
+/* ============================================================
+ * 0. CẤU HÌNH & TRẠNG THÁI TOÀN CỤC
+ * ============================================================ */
+const CFG = {
+  O:[0,0], A:[1,-1], B:[0,-1],
+  L:[[-1/2,-1/2],[0,1/2]],
+  t: {
+    1: (a,b)=>[a,0],
+    2: (a,b)=>[0,-1/2],
+    3: (a,b)=>[1/2,-1/2],
+    4: (a,b)=>[1/2+b,-1]
+  },
+  q: (1+Math.sqrt(5))/4,
+  colors: {1:'#ff6b6b',2:'#4dd0e1',3:'#ffd166',4:'#a78bfa'},
+  mono: '#c9d4e6'
+};
+
+const STATE = {
+  mode:'chaos',
+  alpha:0, beta:0,
+  linkedMode:true,  // MỚI: chế độ liên kết β = −α/3
+  showContact:false, // MỚI: hiện cặp điểm tiếp xúc
+  view:{cx:0.25, cy:-0.5, scale:400},
+  chaosData:null,
+  triData:null,
+  taskId:0,
+  autoTimer:null,
+  dirty:true,
+  showLabels:true, autoHideLabels:true, labelSize:12,
+  selectedPiece:null,
+  showAxes:true, showGrid:true, showOrig:true, showStroke:false,
+  dragging:false, lastX:0, lastY:0,
+  pinchDist:0, pinchCx:0, pinchCy:0
+};
+
+/* ============================================================
+ * 1. TOÁN HỌC: 4 ÁNH XẠ (NGUỒN DUY NHẤT)
+ * ============================================================ */
+const MAPS = {
+  1:(x,y,a,b)=>[-(x+y)/2 + a, y/2],
+  2:(x,y,a,b)=>[-(x+y)/2,     y/2 - 1/2],
+  3:(x,y,a,b)=>[-(x+y)/2 + 1/2, y/2 - 1/2],
+  4:(x,y,a,b)=>[(x+y)/2 + 1/2 + b, -y/2 - 1]
+};
+
+function applyMap(i, v, a, b){ return MAPS[i](v[0], v[1], a, b); }
+
+function applyMapToTri(i, tri, a, b){
+  return {
+    v: [applyMap(i,tri.v[0],a,b), applyMap(i,tri.v[1],a,b), applyMap(i,tri.v[2],a,b)],
+    a: String(i) + tri.a,
+    outer: i
+  };
+}
+
+/* ============================================================
+ * 2. RNG CÓ SEED (mulberry32)
+ * ============================================================ */
+function mulberry32(seed){
+  let t = seed >>> 0;
+  return function(){
+    t = (t + 0x6D2B79F5) >>> 0;
+    let r = t;
+    r = Math.imul(r ^ (r >>> 15), 1 | t);
+    r = r ^ (r + Math.imul(r ^ (r >>> 7), 61 | r));
+    return ((r ^ (r >>> 14)) >>> 0) / 4294967296;
+  };
+}
+function seedFromString(s){
+  let h = 2166136261 >>> 0;
+  for(let i=0;i<s.length;i++){
+    h ^= s.charCodeAt(i);
+    h = Math.imul(h, 16777619);
+  }
+  return h >>> 0;
+}
+
+/* ============================================================
+ * 3. KHUNG BAO AN TOÀN
+ * ============================================================ */
+function safeRadius(a,b){
+  const q = CFG.q;
+  const ts = [[a,0],[0,-0.5],[0.5,-0.5],[0.5+b,-1]];
+  let B = 0;
+  for(const t of ts){ B = Math.max(B, Math.hypot(t[0],t[1])); }
+  const R = Math.max(Math.SQRT2, B/(1-q));
+  return R;
+}
+
+/* ============================================================
+ * 4. WEB WORKER (tạo từ Blob)
+ * ============================================================ */
+const WORKER_SRC = `
+self.onmessage = function(ev){
+  const msg = ev.data;
+  if(msg.type === 'chaos'){
+    const {taskId, alpha, beta, seed, N, skip} = msg;
+    let t = seed >>> 0;
+    function rnd(){
+      t = (t + 0x6D2B79F5) >>> 0;
+      let r = t;
+      r = Math.imul(r ^ (r >>> 15), 1 | t);
+      r = r ^ (r + Math.imul(r ^ (r >>> 7), 61 | r));
+      return ((r ^ (r >>> 14)) >>> 0) / 4294967296;
+    }
+    let x=0, y=0;
+    const CHUNK = 20000;
+    let produced = 0;
+    for(let k=0;k<skip;k++){
+      const i = (rnd()*4)|0;
+      let nx, ny;
+      if(i===0){ nx = -(x+y)/2 + alpha; ny = y/2; }
+      else if(i===1){ nx = -(x+y)/2; ny = y/2 - 0.5; }
+      else if(i===2){ nx = -(x+y)/2 + 0.5; ny = y/2 - 0.5; }
+      else { nx = (x+y)/2 + 0.5 + beta; ny = -y/2 - 1; }
+      x = nx; y = ny;
+    }
+    function step(){
+      const end = Math.min(produced + CHUNK, N);
+      const buf = new Float32Array((end-produced)*3);
+      let k = 0;
+      while(produced < end){
+        const i = (rnd()*4)|0;
+        let nx, ny;
+        if(i===0){ nx = -(x+y)/2 + alpha; ny = y/2; }
+        else if(i===1){ nx = -(x+y)/2; ny = y/2 - 0.5; }
+        else if(i===2){ nx = -(x+y)/2 + 0.5; ny = y/2 - 0.5; }
+        else { nx = (x+y)/2 + 0.5 + beta; ny = -y/2 - 1; }
+        x = nx; y = ny;
+        buf[k++] = x; buf[k++] = y; buf[k++] = i+1;
+        produced++;
+      }
+      self.postMessage({type:'chunk', taskId, buf: buf.buffer}, [buf.buffer]);
+      if(produced < N){
+        setTimeout(step, 0);
+      } else {
+        self.postMessage({type:'done', taskId});
+      }
+    }
+    step();
+  }
+};
+`;
+let worker = null;
+function getWorker(){
+  if(worker) return worker;
+  const blob = new Blob([WORKER_SRC], {type:'application/javascript'});
+  worker = new Worker(URL.createObjectURL(blob));
+  return worker;
+}
+
+/* ============================================================
+ * 5. CANVAS & BIẾN ĐỔI TỌA ĐỘ
+ * ============================================================ */
+const cv = document.getElementById('cv');
+const ctx = cv.getContext('2d');
+let DPR = Math.max(1, window.devicePixelRatio || 1);
+let W=0, H=0;
+
+function resizeCanvas(){
+  const wrap = document.getElementById('canvasWrap');
+  const rect = wrap.getBoundingClientRect();
+  W = Math.max(1, Math.floor(rect.width));
+  H = Math.max(1, Math.floor(rect.height));
+  cv.width = Math.floor(W*DPR);
+  cv.height = Math.floor(H*DPR);
+  cv.style.width = W+'px';
+  cv.style.height = H+'px';
+  ctx.setTransform(DPR,0,0,DPR,0,0);
+  redraw();
+}
+
+function worldToScreen(x,y){
+  return [ (x - STATE.view.cx)*STATE.view.scale + W/2,
+           H/2 - (y - STATE.view.cy)*STATE.view.scale ];
+}
+function screenToWorld(sx,sy){
+  return [ (sx - W/2)/STATE.view.scale + STATE.view.cx,
+           STATE.view.cy - (sy - H/2)/STATE.view.scale ];
+}
+
+/* ============================================================
+ * 6. VẼ LƯỚI / TRỤC / TAM GIÁC GỐC
+ * ============================================================ */
+function niceStep(rangePix, targetPx=80){
+  const rawRange = rangePix;
+  const target = targetPx / STATE.view.scale;
+  const pow = Math.pow(10, Math.floor(Math.log10(target)));
+  const n = target/pow;
+  let step;
+  if(n < 1.5) step = 1*pow;
+  else if(n < 3.5) step = 2*pow;
+  else if(n < 7.5) step = 5*pow;
+  else step = 10*pow;
+  return step;
+}
+
+function drawGridAndAxes(){
+  const [xmin, ymax] = screenToWorld(0,0);
+  const [xmax, ymin] = screenToWorld(W,H);
+  const step = niceStep(Math.max(xmax-xmin, ymax-ymin));
+
+  if(STATE.showGrid){
+    ctx.strokeStyle = '#1e2533';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    let x0 = Math.floor(xmin/step)*step;
+    for(let x=x0; x<=xmax; x+=step){
+      const [sx] = worldToScreen(x,0);
+      ctx.moveTo(sx,0); ctx.lineTo(sx,H);
+    }
+    let y0 = Math.floor(ymin/step)*step;
+    for(let y=y0; y<=ymax; y+=step){
+      const [,sy] = worldToScreen(0,y);
+      ctx.moveTo(0,sy); ctx.lineTo(W,sy);
+    }
+    ctx.stroke();
+  }
+
+  if(STATE.showAxes){
+    ctx.strokeStyle = '#3a455c';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    const [,sy0] = worldToScreen(0,0);
+    const [sx0] = worldToScreen(0,0);
+    ctx.moveTo(0,sy0); ctx.lineTo(W,sy0);
+    ctx.moveTo(sx0,0); ctx.lineTo(sx0,H);
+    ctx.stroke();
+
+    ctx.fillStyle = '#8892a6';
+    ctx.font = '11px system-ui';
+    ctx.textAlign='center'; ctx.textBaseline='top';
+    let x0 = Math.floor(xmin/step)*step;
+    for(let x=x0; x<=xmax; x+=step){
+      if(Math.abs(x)<step*0.01) continue;
+      const [sx] = worldToScreen(x,0);
+      const [,sy] = worldToScreen(0,0);
+      ctx.fillText(formatNum(x), sx, Math.min(H-14, Math.max(2, sy+3)));
+    }
+    ctx.textAlign='right'; ctx.textBaseline='middle';
+    let y0 = Math.floor(ymin/step)*step;
+    for(let y=y0; y<=ymax; y+=step){
+      if(Math.abs(y)<step*0.01) continue;
+      const [sx] = worldToScreen(0,0);
+      const [,sy] = worldToScreen(0,y);
+      ctx.fillText(formatNum(y), Math.max(26, Math.min(W-4, sx-4)), sy);
+    }
+  }
+}
+
+function formatNum(v){
+  if(Math.abs(v) < 1e-12) return '0';
+  if(Math.abs(v) >= 1000 || Math.abs(v) < 0.01) return v.toExponential(1);
+  let s = v.toFixed(3);
+  s = s.replace(/\.?0+$/,'');
+  return s;
+}
+
+function drawOriginalTriangle(){
+  if(!STATE.showOrig) return;
+  const O=CFG.O, A=CFG.A, B=CFG.B;
+  const [x0,y0]=worldToScreen(O[0],O[1]);
+  const [x1,y1]=worldToScreen(A[0],A[1]);
+  const [x2,y2]=worldToScreen(B[0],B[1]);
+  ctx.save();
+  ctx.setLineDash([5,4]);
+  ctx.strokeStyle = '#8892a6';
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(x0,y0); ctx.lineTo(x1,y1); ctx.lineTo(x2,y2); ctx.closePath();
+  ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.fillStyle = '#c9d4e6';
+  ctx.font = '12px system-ui';
+  ctx.textAlign='center'; ctx.textBaseline='middle';
+  ctx.fillText('O', x0-10, y0-10);
+  ctx.fillText('A', x1+10, y1+10);
+  ctx.fillText('B', x2-10, y2+10);
+  ctx.restore();
+}
+
+/* ============================================================
+ * 7. VẼ CHAOS GAME
+ * ============================================================ */
+function drawChaos(){
+  const d = STATE.chaosData;
+  if(!d) return;
+  const mono = document.getElementById('cmMono').checked;
+  const color = mono ? CFG.mono : null;
+  const img = ctx.createImageData(cv.width, cv.height);
+  const data = img.data;
+  const scale = STATE.view.scale;
+  const cx = STATE.view.cx, cy = STATE.view.cy;
+  const pts = d.points;
+  const n = pts.length;
+  for(let k=0;k<n;k++){
+    const x = pts[k*3], y = pts[k*3+1], m = pts[k*3+2];
+    const sx = (x - cx)*scale + W/2;
+    const sy = H/2 - (y - cy)*scale;
+    const ix = (sx*DPR)|0;
+    const iy = (sy*DPR)|0;
+    if(ix<0||iy<0||ix>=cv.width||iy>=cv.height) continue;
+    const idx = (iy*cv.width + ix)*4;
+    let r,g,b;
+    if(mono){ r=201; g=212; b=230; }
+    else {
+      const c = CFG.colors[m];
+      r = parseInt(c.slice(1,3),16);
+      g = parseInt(c.slice(3,5),16);
+      b = parseInt(c.slice(5,7),16);
+    }
+    data[idx]   = Math.min(255, data[idx]   + (r*0.35|0));
+    data[idx+1] = Math.min(255, data[idx+1] + (g*0.35|0));
+    data[idx+2] = Math.min(255, data[idx+2] + (b*0.35|0));
+    data[idx+3] = 255;
+  }
+  ctx.putImageData(img, 0, 0);
+}
+
+/* ============================================================
+ * 8. VẼ TAM GIÁC
+ * ============================================================ */
+function drawTriangles(){
+  const d = STATE.triData;
+  if(!d) return;
+  const tris = d.triangles;
+  const stroke = STATE.showStroke || d.level<=2;
+  const buckets = {1:[],2:[],3:[],4:[]};
+  for(const t of tris) buckets[t.outer].push(t);
+
+  for(const m of [1,2,3,4]){
+    ctx.fillStyle = CFG.colors[m];
+    ctx.beginPath();
+    for(const t of buckets[m]){
+      const [x0,y0] = worldToScreen(t.v[0][0], t.v[0][1]);
+      const [x1,y1] = worldToScreen(t.v[1][0], t.v[1][1]);
+      const [x2,y2] = worldToScreen(t.v[2][0], t.v[2][1]);
+      ctx.moveTo(x0,y0); ctx.lineTo(x1,y1); ctx.lineTo(x2,y2); ctx.closePath();
+    }
+    ctx.fill('evenodd');
+    if(stroke){
+      ctx.strokeStyle = 'rgba(10,12,16,0.6)';
+      ctx.lineWidth = 1;
+      ctx.stroke();
+    }
+  }
+
+  if(STATE.selectedPiece){
+    const t = tris.find(x=>x.a===STATE.selectedPiece);
+    if(t){
+      ctx.save();
+      ctx.strokeStyle = '#ffffff';
+      ctx.lineWidth = 2;
+      ctx.setLineDash([4,3]);
+      const [x0,y0] = worldToScreen(t.v[0][0], t.v[0][1]);
+      const [x1,y1] = worldToScreen(t.v[1][0], t.v[1][1]);
+      const [x2,y2] = worldToScreen(t.v[2][0], t.v[2][1]);
+      ctx.beginPath();
+      ctx.moveTo(x0,y0); ctx.lineTo(x1,y1); ctx.lineTo(x2,y2); ctx.closePath();
+      ctx.stroke();
+      ctx.restore();
+    }
+  }
+
+  drawLabels();
+}
+
+/* ============================================================
+ * 9. NHÃN ĐỊA CHỈ
+ * ============================================================ */
+function drawLabels(){
+  if(!STATE.showLabels) return;
+  if(STATE.mode !== 'tri' || !STATE.triData) return;
+  const tris = STATE.triData.triangles;
+  const size = STATE.labelSize;
+  ctx.font = `${size}px ui-monospace,Menlo,Consolas,monospace`;
+  ctx.textAlign='center'; ctx.textBaseline='middle';
+
+  let drawn = 0, total = tris.length;
+  const charW = size*0.62;
+
+  for(const t of tris){
+    const gx = (t.v[0][0]+t.v[1][0]+t.v[2][0])/3;
+    const gy = (t.v[0][1]+t.v[1][1]+t.v[2][1])/3;
+    const [sx,sy] = worldToScreen(gx,gy);
+    if(sx<-50||sy<-50||sx>W+50||sy>H+50) continue;
+
+    const p0 = worldToScreen(t.v[0][0],t.v[0][1]);
+    const p1 = worldToScreen(t.v[1][0],t.v[1][1]);
+    const p2 = worldToScreen(t.v[2][0],t.v[2][1]);
+    const L0 = Math.hypot(p1[0]-p0[0], p1[1]-p0[1]);
+    const L1 = Math.hypot(p2[0]-p1[0], p2[1]-p1[1]);
+    const L2 = Math.hypot(p0[0]-p2[0], p0[1]-p2[1]);
+    const Lmax = Math.max(L0,L1,L2);
+    const textW = t.a.length * charW + 4;
+
+    if(STATE.autoHideLabels && (Lmax < textW*1.1 || Lmax < 10)) continue;
+
+    ctx.fillStyle = 'rgba(10,12,16,0.55)';
+    ctx.fillRect(sx-textW/2, sy-size/2-1, textW, size+2);
+    ctx.fillStyle = '#ffffff';
+    ctx.fillText(t.a, sx, sy);
+    drawn++;
+  }
+  document.getElementById('labelStats').textContent = `Nhãn: ${drawn}/${total}`;
+}
+
+/* ============================================================
+ * 10. VẼ CẶP ĐIỂM TIẾP XÚC (MỚI)
+ * ============================================================ */
+function drawContactPoints(){
+  if(!STATE.showContact) return;
+  
+  // Chỉ vẽ nếu có hình đã vẽ với bộ tham số hiện tại
+  const hasImage = (STATE.mode==='chaos' && STATE.chaosData && 
+                    STATE.chaosData.alpha===STATE.alpha && 
+                    STATE.chaosData.beta===STATE.beta) ||
+                   (STATE.mode==='tri' && STATE.triData &&
+                    STATE.triData.alpha===STATE.alpha &&
+                    STATE.triData.beta===STATE.beta);
+  
+  if(!hasImage) return;
+
+  const a = STATE.alpha, b = STATE.beta;
+  
+  // fix1 = điểm cố định của f2∘f3 = (0, -1)
+  const fix1 = [0, -1];
+  
+  // fix2 = điểm cố định của f1 = (2α/3, 0)
+  const fix2 = [2*a/3, 0];
+  
+  // U = f4(fix1) = (β, -1/2)
+  const U = MAPS[4](fix1[0], fix1[1], a, b);
+  
+  // V = f2(fix2) = (-α/3, -1/2)
+  const V = MAPS[2](fix2[0], fix2[1], a, b);
+  
+  const [ux, uy] = worldToScreen(U[0], U[1]);
+  const [vx, vy] = worldToScreen(V[0], V[1]);
+  
+  const delta = b + a/3;
+  const dist = Math.abs(delta);
+  
+  // Vẽ đoạn nối nếu khác nhau
+  if(dist > 1e-10){
+    ctx.save();
+    ctx.strokeStyle = '#ff6b6b';
+    ctx.lineWidth = 1.5;
+    ctx.setLineDash([4,3]);
+    ctx.beginPath();
+    ctx.moveTo(ux, uy);
+    ctx.lineTo(vx, vy);
+    ctx.stroke();
+    ctx.restore();
+  }
+  
+  // Vẽ điểm U
+  ctx.save();
+  ctx.fillStyle = '#ff6b6b';
+  ctx.strokeStyle = '#ffffff';
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.arc(ux, uy, 6, 0, 2*Math.PI);
+  ctx.fill();
+  ctx.stroke();
+  
+  // Nhãn U
+  ctx.fillStyle = '#ffffff';
+  ctx.font = 'bold 12px system-ui';
+  ctx.textAlign = 'left';
+  ctx.textBaseline = 'middle';
+  ctx.fillText('U: 4(23)∞', ux+10, uy);
+  ctx.restore();
+  
+  // Vẽ điểm V (nếu khác U)
+  if(dist > 1e-10){
+    ctx.save();
+    ctx.fillStyle = '#4dd0e1';
+    ctx.strokeStyle = '#ffffff';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.arc(vx, vy, 6, 0, 2*Math.PI);
+    ctx.fill();
+    ctx.stroke();
+    
+    // Nhãn V
+    ctx.fillStyle = '#ffffff';
+    ctx.font = 'bold 12px system-ui';
+    ctx.textAlign = 'left';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('V: 21∞', vx+10, vy);
+    ctx.restore();
+  } else {
+    // Nếu trùng nhau, vẽ nhãn kép
+    ctx.save();
+    ctx.fillStyle = '#ffffff';
+    ctx.font = 'bold 12px system-ui';
+    ctx.textAlign = 'left';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('U=V: 4(23)∞ = 21∞', ux+10, uy);
+    ctx.restore();
+  }
+  
+  // Hiển thị thông tin δ và khoảng cách
+  ctx.save();
+  ctx.fillStyle = 'rgba(20,24,32,0.9)';
+  ctx.fillRect(10, 10, 200, 40);
+  ctx.strokeStyle = '#2a3040';
+  ctx.lineWidth = 1;
+  ctx.strokeRect(10, 10, 200, 40);
+  
+  ctx.fillStyle = '#e7ecf3';
+  ctx.font = '11px system-ui';
+  ctx.textAlign = 'left';
+  ctx.textBaseline = 'top';
+  ctx.fillText(`δ = β + α/3 = ${delta.toFixed(9)}`, 15, 15);
+  ctx.fillText(`||U−V|| = |δ| = ${dist.toFixed(9)}`, 15, 30);
+  ctx.restore();
+}
+
+/* ============================================================
+ * 11. REDRAW TỔNG HỢP
+ * ============================================================ */
+function redraw(){
+  ctx.clearRect(0,0,W,H);
+  ctx.fillStyle = '#0a0c10';
+  ctx.fillRect(0,0,W,H);
+  drawGridAndAxes();
+  drawOriginalTriangle();
+  if(STATE.mode==='chaos') drawChaos();
+  else drawTriangles();
+  drawContactPoints(); // MỚI
+}
+
+/* ============================================================
+ * 12. ĐIỀU KHIỂN CHAOS GAME
+ * ============================================================ */
+function startChaos(){
+  cancelAllTasks();
+  const taskId = ++STATE.taskId;
+  const N = parseInt(document.getElementById('numPts').value,10);
+  const seedStr = document.getElementById('seed').value.trim() || '0';
+  const seed = seedFromString(seedStr);
+  const alpha = STATE.alpha, beta = STATE.beta;
+  const skip = 200;
+
+  showProgress(true, `Đang tính ${N.toLocaleString('vi-VN')} điểm…`);
+  const t0 = performance.now();
+
+  const w = getWorker();
+  let produced = 0;
+  const bufAll = new Float32Array(N*3);
+
+  w.onmessage = (ev)=>{
+    const m = ev.data;
+    if(m.taskId !== taskId) return;
+    if(m.type==='chunk'){
+      const arr = new Float32Array(m.buf);
+      bufAll.set(arr, produced*3);
+      produced += arr.length/3;
+      updateProgress(produced/N, `${produced.toLocaleString('vi-VN')} / ${N.toLocaleString('vi-VN')}`);
+      if(produced % 80000 < arr.length/3){
+        STATE.chaosData = {points: bufAll.slice(0, produced*3), alpha, beta, seed, n:produced};
+        redraw();
+      }
+    } else if(m.type==='done'){
+      STATE.chaosData = {points: bufAll, alpha, beta, seed, n:N};
+      const dt = ((performance.now()-t0)/1000).toFixed(2);
+      hideProgress();
+      updateStatus();
+      redraw();
+      console.log(`Chaos done in ${dt}s`);
+    }
+  };
+  w.postMessage({type:'chaos', taskId, alpha, beta, seed, N, skip});
+}
+
+/* ============================================================
+ * 13. XẤP XỈ TAM GIÁC
+ * ============================================================ */
+function buildLevel(level){
+  const a = STATE.alpha, b = STATE.beta;
+  let cur = [{ v:[CFG.O.slice(), CFG.A.slice(), CFG.B.slice()], a:'', outer:0 }];
+  for(let lv=1; lv<=level; lv++){
+    const next = [];
+    for(const t of cur){
+      for(let i=1;i<=4;i++){
+        next.push(applyMapToTri(i, t, a, b));
+      }
+    }
+    cur = next;
+  }
+  return { level, triangles: cur, alpha:a, beta:b };
+}
+
+function setLevel(level){
+  cancelAllTasks();
+  const taskId = ++STATE.taskId;
+  STATE.triData = buildLevel(level);
+  document.getElementById('level').value = level;
+  document.getElementById('levelNum').value = level;
+  document.getElementById('triCount').textContent =
+    `Số tam giác: ${STATE.triData.triangles.length.toLocaleString('vi-VN')}`;
+  updateStatus();
+  redraw();
+}
+
+/* ============================================================
+ * 14. HỦY TÁC VỤ
+ * ============================================================ */
+function cancelAllTasks(){
+  STATE.taskId++;
+  if(STATE.autoTimer){ clearTimeout(STATE.autoTimer); STATE.autoTimer=null; }
+  hideProgress();
+}
+
+/* ============================================================
+ * 15. TIẾN ĐỘ / TRẠNG THÁI
+ * ============================================================ */
+function showProgress(on, label){
+  const w = document.getElementById('progressWrap');
+  w.style.display = on?'block':'none';
+  if(label) document.getElementById('progressLabel').textContent = label;
+}
+function updateProgress(frac, label){
+  document.getElementById('progressFill').style.width = (frac*100).toFixed(1)+'%';
+  if(label) document.getElementById('progressLabel').textContent = label;
+}
+function hideProgress(){ showProgress(false); }
+
+function updateStatus(){
+  const bar = document.getElementById('statusBar');
+  const a = STATE.alpha, b = STATE.beta;
+  let s = `<b>α</b>=${a.toFixed(3)}, <b>β</b>=${b.toFixed(9)}`;
+  if(STATE.linkedMode) s += ` <span style="color:var(--muted)">(liên kết)</span>`;
+  s += ` · Chế độ: <b>${STATE.mode==='chaos'?'Chaos game':'Tam giác từng mức'}</b>`;
+  
+  if(STATE.mode==='chaos' && STATE.chaosData){
+    s += ` · Seed: <b>${document.getElementById('seed').value}</b> · Điểm: <b>${STATE.chaosData.n.toLocaleString('vi-VN')}</b>`;
+    if(STATE.chaosData.alpha!==a || STATE.chaosData.beta!==b){
+      s += ` · <span class="warn">Tham số đã thay đổi — bấm Vẽ để cập nhật.</span>`;
+    }
+  } else if(STATE.mode==='tri' && STATE.triData){
+    s += ` · Mức: <b>${STATE.triData.level}</b> · Tam giác: <b>${STATE.triData.triangles.length.toLocaleString('vi-VN')}</b>`;
+    if(STATE.triData.alpha!==a || STATE.triData.beta!==b){
+      s += ` · <span class="warn">Tham số đã thay đổi — bấm Vẽ để cập nhật.</span>`;
+    }
+  }
+  bar.innerHTML = s;
+  document.getElementById('paramState').style.display='none';
+}
+
+/* ============================================================
+ * 16. CẬP NHẬT THAM SỐ TẬP TRUNG (MỚI)
+ * ============================================================ */
+function updateAlpha(newAlpha){
+  STATE.alpha = newAlpha;
+  if(STATE.linkedMode){
+    STATE.beta = -newAlpha / 3;
+    // Cập nhật UI beta nhưng không kích hoạt sự kiện
+    const betaSlider = document.getElementById('beta');
+    const betaNum = document.getElementById('betaNum');
+    betaSlider.value = STATE.beta;
+    betaNum.value = STATE.beta.toFixed(9);
+  }
+  markDirty();
+}
+
+function updateBeta(newBeta){
+  if(STATE.linkedMode) return; // Không cho phép sửa beta khi đang liên kết
+  STATE.beta = newBeta;
+  markDirty();
+}
+
+function toggleLinkedMode(checked){
+  STATE.linkedMode = checked;
+  const betaSlider = document.getElementById('beta');
+  const betaNum = document.getElementById('betaNum');
+  const betaHint = document.getElementById('betaHint');
+  
+  if(checked){
+    // Bật liên kết: tính beta từ alpha
+    betaSlider.disabled = true;
+    betaNum.disabled = true;
+    betaSlider.step = 'any';
+    betaNum.step = 'any';
+    betaHint.style.display = 'inline';
+    STATE.beta = -STATE.alpha / 3;
+    betaSlider.value = STATE.beta;
+    betaNum.value = STATE.beta.toFixed(9);
+  } else {
+    // Tắt liên kết: cho phép sửa độc lập
+    betaSlider.disabled = false;
+    betaNum.disabled = false;
+    betaSlider.step = '0.001';
+    betaNum.step = '0.001';
+    betaHint.style.display = 'none';
+  }
+  markDirty();
+}
+
+function markDirty(){
+  STATE.dirty = true;
+  // Hủy tác vụ cũ
+  cancelAllTasks();
+  // Vô hiệu hóa cache
+  STATE.chaosData = null;
+  STATE.triData = null;
+  STATE.selectedPiece = null;
+  document.getElementById('pieceInfo').style.display='none';
+  
+  document.getElementById('paramState').style.display='block';
+  updateStatus();
+  
+  if(document.getElementById('autoUpdate').checked){
+    clearTimeout(STATE.autoTimer);
+    STATE.autoTimer = setTimeout(()=>{
+      if(STATE.mode==='chaos') startChaos();
+      else setLevel(parseInt(document.getElementById('level').value,10));
+    }, 350);
+  }
+}
+
+/* ============================================================
+ * 17. RÀNG BUỘC UI: slider ↔ number
+ * ============================================================ */
+function bindRangeNumber(rangeId, numId, onChange){
+  const r = document.getElementById(rangeId);
+  const n = document.getElementById(numId);
+  let updating = false; // Cờ tránh vòng lặp
+  
+  r.addEventListener('input', ()=>{
+    if(updating) return;
+    updating = true;
+    n.value = r.value;
+    onChange(parseFloat(r.value));
+    updating = false;
+  });
+  
+  n.addEventListener('input', ()=>{
+    if(updating) return;
+    updating = true;
+    let v = parseFloat(n.value);
+    if(isNaN(v)){ updating = false; return; }
+    v = Math.max(parseFloat(r.min), Math.min(parseFloat(r.max), v));
+    r.value = v; n.value = v;
+    onChange(v);
+    updating = false;
+  });
+  
+  n.addEventListener('change', ()=>{
+    if(updating) return;
+    updating = true;
+    let v = parseFloat(n.value);
+    if(isNaN(v)) v = parseFloat(r.value);
+    v = Math.max(parseFloat(r.min), Math.min(parseFloat(r.max), v));
+    r.value = v; n.value = v;
+    onChange(v);
+    updating = false;
+  });
+}
+
+// Ràng buộc alpha
+bindRangeNumber('alpha','alphaNum', updateAlpha);
+
+// Ràng buộc beta (chỉ hoạt động khi không liên kết)
+bindRangeNumber('beta','betaNum', updateBeta);
+
+bindRangeNumber('numPts','numPtsNum', ()=>{});
+bindRangeNumber('level','levelNum', (v)=>{
+  if(STATE.mode==='tri') setLevel(v|0);
+});
+
+document.getElementById('labelSize').addEventListener('input', (e)=>{
+  STATE.labelSize = Math.max(6, Math.min(32, parseInt(e.target.value,10)||12));
+  redraw();
+});
+
+// Checkbox liên kết
+document.getElementById('linkBeta').addEventListener('change', (e)=>{
+  toggleLinkedMode(e.target.checked);
+});
+
+// Checkbox điểm tiếp xúc
+document.getElementById('showContact').addEventListener('change', (e)=>{
+  STATE.showContact = e.target.checked;
+  redraw();
+});
+
+// Chế độ
+document.querySelectorAll('.tab').forEach(t=>{
+  t.addEventListener('click', ()=>{
+    document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));
+    t.classList.add('active');
+    STATE.mode = t.dataset.mode;
+    document.getElementById('chaosPanel').style.display = STATE.mode==='chaos'?'block':'none';
+    document.getElementById('triPanel').style.display  = STATE.mode==='tri' ?'block':'none';
+    cancelAllTasks();
+    if(STATE.mode==='tri' && !STATE.triData){
+      setLevel(parseInt(document.getElementById('level').value,10));
+    }
+    updateStatus();
+    redraw();
+  });
+});
+
+// Checkbox hiển thị
+['showAxes','showGrid','showOrig','showStroke','showLabels','autoHideLabels'].forEach(id=>{
+  document.getElementById(id).addEventListener('change', (e)=>{
+    STATE[id] = e.target.checked;
+    redraw();
+  });
+});
+
+// Nút tham số
+document.getElementById('resetParams').onclick = ()=>{
+  STATE.alpha = 0;
+  STATE.beta = STATE.linkedMode ? 0 : STATE.beta;
+  document.getElementById('alpha').value = 0;
+  document.getElementById('alphaNum').value = 0;
+  document.getElementById('beta').value = STATE.beta;
+  document.getElementById('betaNum').value = STATE.beta.toFixed(9);
+  markDirty();
+};
+document.getElementById('fitView').onclick = fitView;
+document.getElementById('zoomFit').onclick = fitView;
+document.getElementById('zoomIn').onclick = ()=>{ STATE.view.scale*=1.3; redraw(); };
+document.getElementById('zoomOut').onclick = ()=>{ STATE.view.scale/=1.3; redraw(); };
+document.getElementById('clearView').onclick = ()=>{
+  cancelAllTasks();
+  STATE.chaosData = null; STATE.triData = null;
+  STATE.selectedPiece = null;
+  document.getElementById('pieceInfo').style.display='none';
+  redraw();
+  updateStatus();
+};
+document.getElementById('savePng').onclick = ()=>{
+  const link = document.createElement('a');
+  link.download = `ifs_a${STATE.alpha.toFixed(3)}_b${STATE.beta.toFixed(3)}_${Date.now()}.png`;
+  link.href = cv.toDataURL('image/png');
+  link.click();
+};
+document.getElementById('newSeed').onclick = ()=>{
+  document.getElementById('seed').value = String((Math.random()*1e9)|0);
+};
+
+// Chaos
+document.getElementById('drawChaos').onclick = startChaos;
+document.getElementById('cancelTask').onclick = ()=>{ cancelAllTasks(); updateStatus(); };
+
+// Tam giác
+document.getElementById('prevLevel').onclick = ()=>{
+  const lv = Math.max(0, (STATE.triData?.level ?? 0) - 1);
+  setLevel(lv);
+};
+document.getElementById('nextLevel').onclick = ()=>{
+  const lv = Math.min(7, (STATE.triData?.level ?? 0) + 1);
+  setLevel(lv);
+};
+document.getElementById('drawL7').onclick = ()=> setLevel(7);
+document.getElementById('autoRun').onclick = ()=>{
+  cancelAllTasks();
+  let lv = 0;
+  const step = ()=>{
+    if(lv>7){ hideProgress(); return; }
+    setLevel(lv);
+    showProgress(true, `Tự chạy: mức ${lv}/7`);
+    updateProgress(lv/7, `Mức ${lv}/7`);
+    lv++;
+    STATE.autoTimer = setTimeout(step, 600);
+  };
+  step();
+};
+document.getElementById('stopRun').onclick = ()=>{ cancelAllTasks(); updateStatus(); };
+
+/* ============================================================
+ * 18. KHUNG NHÌN: PAN / ZOOM
+ * ============================================================ */
+function fitView(){
+  let xs=[], ys=[];
+  if(STATE.mode==='chaos' && STATE.chaosData){
+    const p = STATE.chaosData.points;
+    const step = Math.max(1, Math.floor(p.length/3/5000));
+    for(let i=0;i<p.length;i+=3*step){
+      xs.push(p[i]); ys.push(p[i+1]);
+    }
+  } else if(STATE.mode==='tri' && STATE.triData){
+    for(const t of STATE.triData.triangles){
+      for(const v of t.v){ xs.push(v[0]); ys.push(v[1]); }
+    }
+  }
+  if(xs.length===0){
+    const R = safeRadius(STATE.alpha, STATE.beta);
+    xs=[-R,R]; ys=[-R,R];
+  }
+  const xmin=Math.min(...xs), xmax=Math.max(...xs);
+  const ymin=Math.min(...ys), ymax=Math.max(...ys);
+  const cx=(xmin+xmax)/2, cy=(ymin+ymax)/2;
+  const dx = Math.max(1e-6, xmax-xmin);
+  const dy = Math.max(1e-6, ymax-ymin);
+  const pad = 1.08;
+  const scale = Math.min(W/(dx*pad), H/(dy*pad));
+  STATE.view = {cx, cy, scale};
+  redraw();
+}
+
+function safeInitialView(){
+  const R = safeRadius(STATE.alpha, STATE.beta);
+  const pad = 1.1;
+  const scale = Math.min(W/(2*R*pad), H/(2*R*pad));
+  STATE.view = {cx:0.25, cy:-0.5, scale};
+  const sFit = Math.min(W/(2*R*pad), H/(2*R*pad));
+  STATE.view.scale = Math.min(scale*1.2, sFit);
+}
+
+/* ============================================================
+ * 19. TƯƠNG TÁC: kéo, zoom, chạm, chọn mảnh
+ * ============================================================ */
+cv.addEventListener('mousedown', (e)=>{
+  STATE.dragging = true;
+  STATE.lastX = e.clientX; STATE.lastY = e.clientY;
+  STATE._moved = 0;
+});
+window.addEventListener('mousemove', (e)=>{
+  if(!STATE.dragging) return;
+  const dx = e.clientX - STATE.lastX;
+  const dy = e.clientY - STATE.lastY;
+  STATE._moved += Math.abs(dx)+Math.abs(dy);
+  STATE.view.cx -= dx/STATE.view.scale;
+  STATE.view.cy += dy/STATE.view.scale;
+  STATE.lastX = e.clientX; STATE.lastY = e.clientY;
+  redraw();
+});
+window.addEventListener('mouseup', (e)=>{
+  if(STATE.dragging && STATE._moved < 4){
+    handleClick(e.offsetX, e.offsetY);
+  }
+  STATE.dragging = false;
+});
+
+cv.addEventListener('wheel', (e)=>{
+  e.preventDefault();
+  const [wx,wy] = screenToWorld(e.offsetX, e.offsetY);
+  const factor = Math.exp(-e.deltaY*0.0015);
+  STATE.view.scale *= factor;
+  STATE.view.cx = wx - (e.offsetX - W/2)/STATE.view.scale;
+  STATE.view.cy = wy + (e.offsetY - H/2)/STATE.view.scale;
+  redraw();
+}, {passive:false});
+
+let touches0 = null;
+cv.addEventListener('touchstart', (e)=>{
+  if(e.touches.length===1){
+    STATE.dragging = true;
+    STATE.lastX = e.touches[0].clientX;
+    STATE.lastY = e.touches[0].clientY;
+    STATE._moved = 0;
+  } else if(e.touches.length===2){
+    STATE.dragging = false;
+    const t0 = e.touches[0], t1 = e.touches[1];
+    STATE.pinchDist = Math.hypot(t1.clientX-t0.clientX, t1.clientY-t0.clientY);
+    STATE.pinchCx = (t0.clientX+t1.clientX)/2;
+    STATE.pinchCy = (t0.clientY+t1.clientY)/2;
+  }
+}, {passive:true});
+cv.addEventListener('touchmove', (e)=>{
+  if(e.touches.length===1 && STATE.dragging){
+    const dx = e.touches[0].clientX - STATE.lastX;
+    const dy = e.touches[0].clientY - STATE.lastY;
+    STATE._moved += Math.abs(dx)+Math.abs(dy);
+    STATE.view.cx -= dx/STATE.view.scale;
+    STATE.view.cy += dy/STATE.view.scale;
+    STATE.lastX = e.touches[0].clientX;
+    STATE.lastY = e.touches[0].clientY;
+    redraw();
+  } else if(e.touches.length===2){
+    const t0 = e.touches[0], t1 = e.touches[1];
+    const d = Math.hypot(t1.clientX-t0.clientX, t1.clientY-t0.clientY);
+    const cx = (t0.clientX+t1.clientX)/2;
+    const cy = (t0.clientY+t1.clientY)/2;
+    const rect = cv.getBoundingClientRect();
+    const ox = cx - rect.left, oy = cy - rect.top;
+    const [wx,wy] = screenToWorld(ox, oy);
+    const factor = d/STATE.pinchDist;
+    STATE.view.scale *= factor;
+    STATE.view.cx = wx - (ox - W/2)/STATE.view.scale;
+    STATE.view.cy = wy + (oy - H/2)/STATE.view.scale;
+    STATE.pinchDist = d;
+    redraw();
+  }
+  e.preventDefault();
+}, {passive:false});
+cv.addEventListener('touchend', (e)=>{
+  if(STATE.dragging && STATE._moved < 8 && e.changedTouches.length===1){
+    const rect = cv.getBoundingClientRect();
+    const ox = e.changedTouches[0].clientX - rect.left;
+    const oy = e.changedTouches[0].clientY - rect.top;
+    handleClick(ox, oy);
+  }
+  STATE.dragging = false;
+});
+
+/* ============================================================
+ * 20. CHỌN MẢNH
+ * ============================================================ */
+function pointInTri(px,py, v0,v1,v2){
+  const d1 = sign(px,py,v0,v1);
+  const d2 = sign(px,py,v1,v2);
+  const d3 = sign(px,py,v2,v0);
+  const hasNeg = (d1<0)||(d2<0)||(d3<0);
+  const hasPos = (d1>0)||(d2>0)||(d3>0);
+  return !(hasNeg && hasPos);
+}
+function sign(px,py, a,b){
+  return (px-b[0])*(a[1]-b[1]) - (a[0]-b[0])*(py-b[1]);
+}
+
+function handleClick(ox, oy){
+  if(STATE.mode!=='tri' || !STATE.triData) return;
+  const [wx,wy] = screenToWorld(ox,oy);
+  const hits = [];
+  for(const t of STATE.triData.triangles){
+    if(pointInTri(wx,wy, t.v[0], t.v[1], t.v[2])) hits.push(t);
+  }
+  showPieceInfo(hits);
+  redraw();
+}
+
+function showPieceInfo(hits){
+  const box = document.getElementById('pieceInfo');
+  const c = document.getElementById('pieceContent');
+  if(hits.length===0){ box.style.display='none'; return; }
+  let html = '';
+  for(const t of hits){
+    const gx = (t.v[0][0]+t.v[1][0]+t.v[2][0])/3;
+    const gy = (t.v[0][1]+t.v[1][1]+t.v[2][1])/3;
+    const comp = compositionText(t.a);
+    html += `<div style="margin-bottom:8px;border-bottom:1px dashed #2a3040;padding-bottom:6px">
+      <div class="addr">Địa chỉ ${t.a||'∅'}: ${comp}</div>
+      <div>V0 = (${t.v[0][0].toFixed(4)}, ${t.v[0][1].toFixed(4)})</div>
+      <div>V1 = (${t.v[1][0].toFixed(4)}, ${t.v[1][1].toFixed(4)})</div>
+      <div>V2 = (${t.v[2][0].toFixed(4)}, ${t.v[2][1].toFixed(4)})</div>
+      <div>Trọng tâm = (${gx.toFixed(4)}, ${gy.toFixed(4)})</div>
+    </div>`;
+  }
+  c.innerHTML = html;
+  box.style.display='block';
+  STATE.selectedPiece = hits[0].a;
+}
+function compositionText(addr){
+  if(!addr) return 'T';
+  const parts = addr.split('').map(c=>`f<sub>${c}</sub>`);
+  let s = parts[0] + '(';
+  for(let i=1;i<parts.length;i++) s += parts[i] + '(';
+  s += 'T';
+  for(let i=0;i<parts.length;i++) s += ')';
+  return s;
+}
+document.getElementById('closePiece').onclick = ()=>{
+  document.getElementById('pieceInfo').style.display='none';
+  STATE.selectedPiece = null;
+  redraw();
+};
+
+/* ============================================================
+ * 21. CÔNG THỨC HIỂN THỊ
+ * ============================================================ */
+function updateFormula(){
+  const a = STATE.alpha.toFixed(3), b = STATE.beta.toFixed(9);
+  const box = document.getElementById('formulaBox');
+  box.innerHTML =
+`f₁(x,y) = ( −(x+y)/2 + ${a} ,  y/2 )
+f₂(x,y) = ( −(x+y)/2         ,  y/2 − 1/2 )
+f₃(x,y) = ( −(x+y)/2 + 1/2   ,  y/2 − 1/2 )
+f₄(x,y) = (  (x+y)/2 + 1/2 + ${b} ,  −y/2 − 1 )
+
+L = [ [−1/2, −1/2], [0, 1/2] ]     phần tuyến tính của f₄ là −L`;
+}
+
+/* ============================================================
+ * 22. TỰ KIỂM TRA (MỞ RỘNG)
+ * ============================================================ */
+function runSelfTests(){
+  const out = [];
+  const EPS = 1e-12;
+  const eq = (u,v)=> Math.abs(u[0]-v[0])<EPS && Math.abs(u[1]-v[1])<EPS;
+  const O=[0,0], A=[1,-1], B=[0,-1];
+  const M=[0.5,-0.5], P=[0.5,-1], Q=[0,-0.5];
+
+  // Ảnh các đỉnh tại α=β=0
+  const cases = [
+    ['f1(O)', MAPS[1](...O,0,0), O],
+    ['f1(A)', MAPS[1](...A,0,0), Q],
+    ['f1(B)', MAPS[1](...B,0,0), M],
+    ['f2(O)', MAPS[2](...O,0,0), Q],
+    ['f2(A)', MAPS[2](...A,0,0), B],
+    ['f2(B)', MAPS[2](...B,0,0), P],
+    ['f3(O)', MAPS[3](...O,0,0), M],
+    ['f3(A)', MAPS[3](...A,0,0), P],
+    ['f3(B)', MAPS[3](...B,0,0), A],
+    ['f4(O)', MAPS[4](...O,0,0), P],
+    ['f4(A)', MAPS[4](...A,0,0), M],
+    ['f4(B)', MAPS[4](...B,0,0), Q],
+  ];
+  let ok = 0;
+  for(const [name, got, exp] of cases){
+    const pass = eq(got,exp);
+    if(pass) ok++;
+    out.push(`${pass?'✓':'✗'} ${name} = (${got[0].toFixed(4)},${got[1].toFixed(4)}) ${pass?'=':'≠'} (${exp[0]},${exp[1]})`);
+  }
+
+  // Số tam giác các mức
+  for(const lv of [0,1,7]){
+    const d = buildLevel(lv);
+    const exp = Math.pow(4,lv);
+    const pass = d.triangles.length===exp;
+    if(pass) ok++;
+    out.push(`${pass?'✓':'✗'} Mức ${lv}: ${d.triangles.length} tam giác ${pass?'=':'≠'} ${exp}`);
+  }
+
+  // Địa chỉ dài đúng
+  {
+    const d = buildLevel(3);
+    const pass = d.triangles.every(t=>t.a.length===3);
+    if(pass) ok++;
+    out.push(`${pass?'✓':'✗'} Mức 3: mọi địa chỉ dài 3`);
+    const set = new Set(d.triangles.map(t=>t.a));
+    const pass2 = set.size === 64;
+    if(pass2) ok++;
+    out.push(`${pass2?'✓':'✗'} Mức 3: ${set.size} địa chỉ khác nhau (kỳ vọng 64)`);
+  }
+
+  // Thứ tự hợp thành
+  {
+    const a=0,b=0;
+    const T0 = {v:[O.slice(),A.slice(),B.slice()], a:'', outer:0};
+    const T12 = applyMapToTri(1, applyMapToTri(2, T0, a, b), a, b);
+    const T21 = applyMapToTri(2, applyMapToTri(1, T0, a, b), a, b);
+    const v12_O = T12.v[0];
+    const v21_O = T21.v[0];
+    const exp12 = MAPS[1](...MAPS[2](...O,0,0),0,0);
+    const exp21 = MAPS[2](...MAPS[1](...O,0,0),0,0);
+    const p1 = eq(v12_O, exp12);
+    const p2 = eq(v21_O, exp21);
+    if(p1) ok++;
+    if(p2) ok++;
+    out.push(`${p1?'✓':'✗'} Đỉnh O của mảnh 12 = f1(f2(O)) = (${exp12[0].toFixed(4)},${exp12[1].toFixed(4)})`);
+    out.push(`${p2?'✓':'✗'} Đỉnh O của mảnh 21 = f2(f1(O)) = (${exp21[0].toFixed(4)},${exp21[1].toFixed(4)})`);
+    const diff = Math.hypot(v12_O[0]-v21_O[0], v12_O[1]-v21_O[1]);
+    out.push(`   (12 ≠ 21: khoảng cách = ${diff.toFixed(4)})`);
+
+    const T123 = applyMapToTri(1, applyMapToTri(2, applyMapToTri(3, T0, a, b), a, b), a, b);
+    const exp123 = MAPS[1](...MAPS[2](...MAPS[3](...O,0,0),0,0),0,0);
+    const p3 = eq(T123.v[0], exp123);
+    if(p3) ok++;
+    out.push(`${p3?'✓':'✗'} Đỉnh O của mảnh 123 = f1(f2(f3(O)))`);
+  }
+
+  // Trọng tâm mảnh w = f_w(trọng tâm T)
+  {
+    const a=0,b=0;
+    const G = [(O[0]+A[0]+B[0])/3, (O[1]+A[1]+B[1])/3];
+    const d = buildLevel(3);
+    let pass = true;
+    for(const t of d.triangles){
+      const gx = (t.v[0][0]+t.v[1][0]+t.v[2][0])/3;
+      const gy = (t.v[0][1]+t.v[1][1]+t.v[2][1])/3;
+      let p = G.slice();
+      for(let i=t.a.length-1;i>=0;i--){
+        p = MAPS[parseInt(t.a[i],10)](p[0],p[1],a,b);
+      }
+      if(Math.hypot(gx-p[0], gy-p[1]) > 1e-10){ pass=false; break; }
+    }
+    if(pass) ok++;
+    out.push(`${pass?'✓':'✗'} Trọng tâm mảnh w = f_w(trọng tâm T) (mức 3)`);
+  }
+
+  // α chỉ thay đổi tịnh tiến f1; β chỉ thay đổi tịnh tiến f4
+  {
+    const Lpart = (i)=>{
+      const v = [0.7,-0.3];
+      const d1 = [MAPS[i](v[0],v[1],0,0)[0]-MAPS[i](0,0,0,0)[0],
+                  MAPS[i](v[0],v[1],0,0)[1]-MAPS[i](0,0,0,0)[1]];
+      const d2 = [MAPS[i](v[0],v[1],0.5,-0.3)[0]-MAPS[i](0,0,0.5,-0.3)[0],
+                  MAPS[i](v[0],v[1],0.5,-0.3)[1]-MAPS[i](0,0,0.5,-0.3)[1]];
+      return Math.hypot(d1[0]-d2[0], d1[1]-d2[1])<1e-12;
+    };
+    const p = [1,2,3,4].every(Lpart);
+    if(p) ok++;
+    out.push(`${p?'✓':'✗'} Phần tuyến tính không phụ thuộc α,β`);
+
+    const v=[0.3,-0.2];
+    const only_f1 = (
+      eq(MAPS[2](v[0],v[1],0.5,0), MAPS[2](v[0],v[1],0,0)) &&
+      eq(MAPS[3](v[0],v[1],0.5,0), MAPS[3](v[0],v[1],0,0)) &&
+      eq(MAPS[4](v[0],v[1],0.5,0), MAPS[4](v[0],v[1],0,0)) &&
+      !eq(MAPS[1](v[0],v[1],0.5,0), MAPS[1](v[0],v[1],0,0))
+    );
+    if(only_f1) ok++;
+    out.push(`${only_f1?'✓':'✗'} α chỉ thay đổi vectơ tịnh tiến của f₁`);
+
+    const only_f4 = (
+      eq(MAPS[1](v[0],v[1],0,0.7), MAPS[1](v[0],v[1],0,0)) &&
+      eq(MAPS[2](v[0],v[1],0,0.7), MAPS[2](v[0],v[1],0,0)) &&
+      eq(MAPS[3](v[0],v[1],0,0.7), MAPS[3](v[0],v[1],0,0)) &&
+      !eq(MAPS[4](v[0],v[1],0,0.7), MAPS[4](v[0],v[1],0,0))
+    );
+    if(only_f4) ok++;
+    out.push(`${only_f4?'✓':'✗'} β chỉ thay đổi vectơ tịnh tiến của f₄`);
+  }
+
+  // KIỂM TRA CHẾ ĐỘ LIÊN KẾT (MỚI)
+  {
+    // alpha = 0 → beta = 0
+    const p1 = Math.abs(0 + 0/3) < EPS;
+    if(p1) ok++;
+    out.push(`${p1?'✓':'✗'} α=0 → β=−α/3=0`);
+
+    // alpha = 0.3 → beta ≈ -0.1
+    const beta2 = -0.3/3;
+    const p2 = Math.abs(beta2 - (-0.1)) < EPS;
+    if(p2) ok++;
+    out.push(`${p2?'✓':'✗'} α=0.3 → β=${beta2.toFixed(9)} ≈ −0.1`);
+
+    // alpha = -0.6 → beta ≈ 0.2
+    const beta3 = -(-0.6)/3;
+    const p3 = Math.abs(beta3 - 0.2) < EPS;
+    if(p3) ok++;
+    out.push(`${p3?'✓':'✗'} α=−0.6 → β=${beta3.toFixed(9)} ≈ 0.2`);
+
+    // alpha = 0.127 → beta = -0.127/3, không bị làm tròn
+    const beta4 = -0.127/3;
+    const p4 = Math.abs(beta4 - (-0.042333333333)) < 1e-9;
+    if(p4) ok++;
+    out.push(`${p4?'✓':'✗'} α=0.127 → β=${beta4.toFixed(12)} (không làm tròn thành −0.042)`);
+
+    // Trong chế độ liên kết, |beta + alpha/3| < 10^-12
+    const testAlpha = 0.456;
+    const testBeta = -testAlpha/3;
+    const p5 = Math.abs(testBeta + testAlpha/3) < EPS;
+    if(p5) ok++;
+    out.push(`${p5?'✓':'✗'} Liên kết: |β + α/3| = ${Math.abs(testBeta + testAlpha/3).toExponential(2)} < 10⁻¹²`);
+  }
+
+  // KIỂM TRA ĐIỂM TIẾP XÚC (MỚI)
+  {
+    const a = 0.3, b = -0.1; // β = −α/3
+    const fix1 = [0, -1];
+    const fix2 = [2*a/3, 0];
+    const U = MAPS[4](fix1[0], fix1[1], a, b);
+    const V = MAPS[2](fix2[0], fix2[1], a, b);
+    
+    // U = (β, -1/2)
+    const p1 = Math.abs(U[0] - b) < EPS && Math.abs(U[1] - (-0.5)) < EPS;
+    if(p1) ok++;
+    out.push(`${p1?'✓':'✗'} U = f₄(fix₁) = (${U[0].toFixed(6)}, ${U[1].toFixed(6)}) = (β, −1/2)`);
+    
+    // V = (-α/3, -1/2)
+    const p2 = Math.abs(V[0] - (-a/3)) < EPS && Math.abs(V[1] - (-0.5)) < EPS;
+    if(p2) ok++;
+    out.push(`${p2?'✓':'✗'} V = f₂(fix₂) = (${V[0].toFixed(6)}, ${V[1].toFixed(6)}) = (−α/3, −1/2)`);
+    
+    // U = V khi β = −α/3
+    const dist = Math.hypot(U[0]-V[0], U[1]-V[1]);
+    const p3 = dist < EPS;
+    if(p3) ok++;
+    out.push(`${p3?'✓':'✗'} Khi β=−α/3: ||U−V|| = ${dist.toExponential(2)} < 10⁻¹² (trùng nhau)`);
+    
+    // Khi β ≠ −α/3, U ≠ V
+    const a2 = 0.3, b2 = 0; // β ≠ −α/3
+    const U2 = MAPS[4](fix1[0], fix1[1], a2, b2);
+    const V2 = MAPS[2]

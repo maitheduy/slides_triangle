@@ -1,0 +1,6 @@
+{
+  "name": "Phòng thí nghiệm IFS Affine — Numba & Web",
+  "description": "Phòng thí nghiệm tương tác họ hai tham số IFS affine với Chaos game, xấp xỉ tam giác và tối ưu hóa Numba Python.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

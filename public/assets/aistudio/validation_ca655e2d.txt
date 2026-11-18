@@ -1,0 +1,21 @@
+PASS: 4 citation keys resolved; 4 bibliography entries; no duplicate keys
+PASS: 34 unique labels; all cross-references resolved
+PASS: LaTeX environments balanced
+PASS: unescaped LaTeX grouping braces balanced
+PASS: no accidental single-backslash line endings
+PASS: L^2 = I/4
+PASS: integer inverse matrix
+PASS: similarity conjugacy
+PASS: bottom constant contribution
+PASS: integer translation recursion 22
+PASS: integer translation recursion 23
+PASS: integer translation recursion 32
+PASS: integer translation recursion 33
+PASS: initial irrational neighbor formula
+PASS: reflection recursion through f2
+PASS: reflection recursion through f3
+PASS: integer translation range checked for depths 1--8 (supplement to written induction)
+
+The finite-type classification is a written mathematical proof, not a Lean certificate.
+PDF compilation not performed: this environment lacks fontspec.sty and xelatex.fmt.
+Citation metadata checked against the supplied papers and primary-source pages.
